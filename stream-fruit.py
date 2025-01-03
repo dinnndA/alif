@@ -14,12 +14,16 @@ def load_model_and_scaler(model_file, scaler_file=None):
 
 # Fungsi untuk prediksi
 def predict_fruit(features, model, scaler=None):
-    if scaler:
-        features = scaler.transform([features])
-    else:
-        features = np.array([features])
-    prediction_class = model.predict(features)[0]
-    return prediction_class
+    try:
+        if scaler:
+            features = scaler.transform([features])  # Pastikan format input 2D
+        else:
+            features = np.array([features])  # Formatkan ke array 2D
+        prediction_class = model.predict(features)[0]  # Ambil hasil prediksi
+        return prediction_class
+    except Exception as e:
+        st.error(f"Terjadi kesalahan saat memprediksi: {str(e)}")
+        return None
 
 # Konfigurasi Streamlit
 st.title("Aplikasi Prediksi Buah")
