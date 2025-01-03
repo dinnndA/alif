@@ -1,17 +1,6 @@
 import streamlit as st
-import pandas as pd
 import pickle
-from sklearn.preprocessing import StandardScaler
-
-# Load dataset
-file_path = 'fruit.xlsx'
-df = pd.read_excel(file_path)
-X = df[['diameter', 'weight', 'red', 'green', 'blue']]  # Fitur
-y = df['name']  # Label target
-
-# Mapping label ke kelas secara manual
-label_to_class = {'grapefruit': 0, 'orange': 1}
-class_to_label = {v: k for k, v in label_to_class.items()}
+import numpy as np
 
 # Fungsi untuk memuat model dan scaler
 def load_model_and_scaler(model_file, scaler_file=None):
@@ -27,13 +16,14 @@ def load_model_and_scaler(model_file, scaler_file=None):
 def predict_fruit(features, model, scaler=None):
     if scaler:
         features = scaler.transform([features])
-    prediction_class = model.predict([features])[0]  # Prediksi kelas
-    prediction_label = class_to_label[prediction_class]  # Mapping ke label
-    return prediction_label, prediction_class
+    else:
+        features = np.array([features])
+    prediction_class = model.predict(features)[0]
+    return prediction_class
 
 # Konfigurasi Streamlit
 st.title("Aplikasi Prediksi Buah")
-st.write("Pilih algoritma yang akan digunakan, lalu masukkan fitur buah untuk memprediksi jenis buah.")
+st.write("Masukkan fitur buah dan pilih model untuk memprediksi jenis buah.")
 
 # Pilih algoritma
 algorithm = st.selectbox("Pilih Algoritma", ["Random Forest", "SVM", "Perceptron"])
@@ -51,13 +41,17 @@ elif algorithm == "Perceptron":
     scaler_file = 'scaler_perceptron.pkl'
     model, scaler = load_model_and_scaler(model_file, scaler_file)
 
-# Input pengguna
-input_features = []
-for col in X.columns:
-    value = st.number_input(f"Masukkan nilai untuk {col}:", value=0.0)
-    input_features.append(value)
+# Input fitur buah
+st.write("Masukkan nilai fitur berikut:")
+diameter = st.number_input("Diameter (mm):", value=0.0, step=0.1)
+weight = st.number_input("Berat (gram):", value=0.0, step=0.1)
+red = st.number_input("Intensitas Merah (0-255):", value=0, step=1)
+green = st.number_input("Intensitas Hijau (0-255):", value=0, step=1)
+blue = st.number_input("Intensitas Biru (0-255):", value=0, step=1)
+
+input_features = [diameter, weight, red, green, blue]
 
 # Prediksi
 if st.button("Prediksi"):
-    label, class_index = predict_fruit(input_features, model, scaler)
-    st.success(f"Model memprediksi jenis buah: {label} (Cluster: {class_index})")
+    prediction = predict_fruit(input_features, model, scaler)
+    st.success(f"Model memprediksi jenis buah: {prediction}")
